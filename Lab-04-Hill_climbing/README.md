@@ -1,378 +1,212 @@
-# Lab 04: Hill-Climbing Search with N-Queens Problem
+# Lab 04: Hill-Climbing Search with the N-Queens Problem
+
+**Implementation of Basic Hill-Climbing and Random-Restart Hill-Climbing algorithms for solving the N-Queens problem.**
 
 ## 1. Lab Objectives
 
-The main objectives of this lab are:
+The main purpose of this lab is to implement Hill-Climbing and Random-Restart Hill-Climbing in Python and use them to solve the N-Queens problem.
 
-- To understand the concept of Local Search.
-- To learn how the Hill-Climbing algorithm works.
-- To solve the N-Queens problem using Hill-Climbing.
-- To understand the role of an evaluation function.
-- To generate and evaluate neighboring states.
-- To implement Random-Restart Hill-Climbing.
-- To compare Basic Hill-Climbing with Random-Restart Hill-Climbing.
-- To understand local maxima and probabilistic completeness.
+By completing this practical, I learned how to represent a search state, calculate its evaluation score, and generate neighboring states. I also explored how Hill-Climbing improves a current state, why it may stop at a local maximum, and how random restarts provide further chances of finding a valid solution.
 
 ## 2. Background: Local Search and Hill-Climbing
 
-Local Search is a search technique that starts from an initial state and tries to improve it step by step.
+Traditional search methods such as Breadth-First Search (BFS), Depth-First Search (DFS), and A* explore possible states to find a path from the starting state to the goal.
 
-Unlike traditional search algorithms, Local Search does not store the complete search path. It focuses mainly on the current state and its neighboring states.
+Local Search works differently. Instead of keeping track of a complete path, it concentrates on improving the current state.
 
-**Hill-Climbing** is a Local Search algorithm that continuously moves towards a better neighboring state.
+Hill-Climbing is a greedy local search algorithm. It checks neighboring states and moves to a better one when its evaluation score is higher.
 
-### How Hill-Climbing Works
+**Main steps of Hill-Climbing:**
 
-1. Start with an initial state.
-2. Generate all neighboring states.
-3. Evaluate each neighbor.
-4. Select the neighbor with the highest evaluation score.
-5. Move to that neighbor only if it improves the current state.
+1. Begin with an initial state.
+2. Calculate its evaluation score.
+3. Generate the neighboring states.
+4. Select the neighbor with the highest score.
+5. Move to it only if it improves the current score.
 6. Stop when no better neighbor is available.
 
-### Important Terms
-
-- **Current State:** The state currently being evaluated.
-- **Neighbor:** A state that can be reached through a small change.
-- **Evaluation Function:** Measures the quality of a state.
-- **Local Maximum:** A state that is better than all its immediate neighbors but may not be the best overall solution.
-- **Global Maximum:** The best possible state in the entire search space.
+Hill-Climbing can reach a valid solution, but it may also stop at a local maximum that is not the goal. Therefore, success is not guaranteed from every initial state.
 
 ## 3. The N-Queens Problem
 
-The N-Queens problem is a puzzle in which N queens must be placed on an N × N chessboard.
+The N-Queens problem involves placing N queens on an N × N chessboard so that no two queens attack one another.
 
-The main condition is that no two queens should attack each other.
+A queen can attack another queen if both occupy:
 
-A queen can attack another queen if they are in the same:
+- The same row.
+- The same column.
+- The same diagonal.
 
-- Row
-- Column
-- Diagonal
+A valid arrangement must have zero attacking pairs.
 
-The objective is to place all queens so that no two queens attack each other.
+**Example: A valid arrangement for four queens**
 
-For example, in the 8-Queens problem, we have to place 8 queens on an 8 × 8 chessboard.
+```text
+. Q . .
+. . . Q
+Q . . .
+. . Q .
+```
+
+In this arrangement, no two queens attack each other.
 
 ## 4. Representing a State
 
-In this lab, a state is represented using a Python list.
-
-- The index represents the column.
-- The value represents the row.
-- Each list position contains one queen.
-- Therefore, there is exactly one queen in each column.
+For this practical, the chessboard is represented through a Python list.
 
 **Example:**
 
 ```python
-state = [0, 4, 7, 5, 2, 6, 1, 3]
+state = [1, 3, 0, 2]
 ```
 
-This means:
+In this representation:
 
-- Queen 1 is in column 0, row 0.
-- Queen 2 is in column 1, row 4.
-- Queen 3 is in column 2, row 7.
+- Each index identifies a column.
+- The value at that index identifies the queen's row.
+- Every list element represents one queen.
 
-The same pattern continues for the remaining queens.
+This method automatically places exactly one queen in each column, so column conflicts cannot occur.
 
-Since there is exactly one queen in each column, column conflicts are automatically avoided.
+**Task 1 — State Representation**
+
+A list was created to store the queen positions and then printed to check the state representation.
 
 ## 5. Generating a Random Initial State
 
-A random initial state is generated by placing one queen in a randomly selected row of each column.
+The function `random_state(n)` generates a starting arrangement by selecting a random row for each column.
 
-**Python Code:**
+It creates a list containing N positions, with one queen assigned to every column.
 
-```python
-import random
+Since the row positions are selected randomly, running the function again can produce a different initial arrangement.
 
-def random_state(n):
-    return [random.randint(0, n - 1) for _ in range(n)]
+**Task 2 — Random Initial State**
 
-state = random_state(8)
-
-print("Initial State:", state)
-```
-
-**Explanation:**
-
-- `random.randint(0, n - 1)` selects a random row.
-- The loop creates one position for each column.
-- The resulting list represents the initial board state.
+Generated and displayed a random initial state for the eight-queen problem.
 
 ## 6. Defining the Evaluation Function
 
-The evaluation function measures the quality of a state.
+The evaluation function checks the quality of a state by counting the pairs of queens that attack each other.
 
-In this lab, it counts the number of pairs of queens that attack each other.
+Our goal is to reduce the number of conflicts to zero.
 
-The function returns the negative number of conflicts.
+For Hill-Climbing, we use a negative conflict count as the evaluation score:
 
-**Python Code:**
+**Evaluation(state) = −count_conflicts(state)**
 
-```python
-def count_conflicts(state):
-    conflicts = 0
-    n = len(state)
+| Conflicts | Evaluation Score |
+|---|---|
+| 5 | -5 |
+| 3 | -3 |
+| 1 | -1 |
+| 0 | 0 |
 
-    for i in range(n):
-        for j in range(i + 1, n):
+A higher score indicates a better arrangement. Thus, zero is the highest possible score and represents a valid solution.
 
-            # Same row
-            if state[i] == state[j]:
-                conflicts += 1
+**Task 3 — Conflict Counting**
 
-            # Same diagonal
-            if abs(state[i] - state[j]) == abs(i - j):
-                conflicts += 1
+Implemented `count_conflicts(state)` to identify:
 
-    return conflicts
+- Queens in the same row.
+- Queens on the same diagonal.
 
-
-def evaluate(state):
-    return -count_conflicts(state)
-```
-
-**Explanation:**
-
-- The function checks every pair of queens.
-- It counts conflicts in the same row and diagonal.
-- The evaluation function returns the negative conflict count.
-- A higher evaluation score means a better state.
-
-**Important:**
-
-- Score `0` means there are no conflicts.
-- A negative score means that some queens are attacking each other.
-- The goal is to reach an evaluation score of `0`.
+Since each column already contains exactly one queen, column conflicts are avoided by the state representation itself.
 
 ## 7. Generating Neighboring States
 
-A neighboring state is created by moving one queen to another row in the same column.
+A neighboring state is produced by making one small change to the current arrangement.
 
-For each column, the queen can move to any other row.
+In this implementation, one queen is moved to a different row in its existing column. All other queen positions remain unchanged.
 
-The total number of neighbors is:
+The total number of neighbors for a board of size N is:
 
-\[
-N \times (N-1)
-\]
+**N × (N − 1)**
 
-For an 8 × 8 board:
+For an eight-queen board:
 
-\[
-8 \times 7 = 56
-\]
+**8 × 7 = 56 neighbors**
 
-Therefore, 56 neighboring states are generated.
+**Task 4 — Neighbor Generation**
 
-**Python Code:**
-
-```python
-def get_neighbors(state):
-    neighbors = []
-    n = len(state)
-
-    for col in range(n):
-        for row in range(n):
-
-            if row != state[col]:
-                new_state = state.copy()
-                new_state[col] = row
-                neighbors.append(new_state)
-
-    return neighbors
-```
-
-**Explanation:**
-
-- The outer loop selects a column.
-- The inner loop selects a new row.
-- The current row is skipped.
-- A new state is created by moving one queen.
-- All generated states are stored in the neighbors list.
+Implemented `get_neighbors(state)` to generate every possible state obtained by moving one queen to another row in the same column.
 
 ## 8. Implementing Basic Hill-Climbing
 
-Basic Hill-Climbing starts from an initial state and continuously selects the best neighboring state.
+The function `hill_climbing(n)` combines the state representation, evaluation function, and neighbor-generation function.
 
-It moves only when the new state has a better evaluation score.
+Its working procedure is:
 
-If no neighbor has a higher score, the algorithm stops.
+1. Select a random initial arrangement.
+2. Calculate the score of the current state.
+3. Generate all possible neighboring states.
+4. Find the neighbor with the highest evaluation score.
+5. Move to that neighbor if its score is higher than the current score.
+6. Stop if no neighbor provides an improvement.
 
-**Python Code:**
-
-```python
-def hill_climbing(n):
-    current = random_state(n)
-    scores = [evaluate(current)]
-
-    while True:
-        neighbors = get_neighbors(current)
-
-        best_neighbor = max(neighbors, key=evaluate)
-
-        if evaluate(best_neighbor) <= evaluate(current):
-            break
-
-        current = best_neighbor
-        scores.append(evaluate(current))
-
-    return current, scores
-```
-
-**Explanation:**
-
-1. Generate a random initial state.
-2. Calculate its evaluation score.
-3. Generate all neighboring states.
-4. Select the neighbor with the highest score.
-5. Move only if the selected neighbor improves the current score.
-6. Stop when no better neighbor is available.
-
-The algorithm may stop at a local maximum without finding a valid solution.
+The function also stores the evaluation scores during the search. These values are later used to display the progress in a graph.
 
 ## 9. Running Hill-Climbing
 
-Now run the Hill-Climbing algorithm for an 8-Queens problem.
+Basic Hill-Climbing was executed for the eight-queen problem.
 
-**Python Code:**
+The final arrangement, conflict count, evaluation score, and number of iterations were examined.
 
-```python
-solution, scores = hill_climbing(8)
+There are two possible outcomes:
 
-print("Final State:", solution)
-print("Final Conflicts:", count_conflicts(solution))
-print("Iterations:", len(scores))
-print("Solved:", count_conflicts(solution) == 0)
-```
+- **Solved:** The final conflict count is zero.
+- **Not Solved:** The algorithm stops while some conflicts remain because no better neighboring state is available.
 
-**Explanation:**
-
-- `hill_climbing(8)` runs the algorithm for an 8 × 8 board.
-- `count_conflicts(solution)` calculates the final conflicts.
-- `len(scores)` shows the number of recorded scores.
-- `Solved` becomes True if the final conflict count is zero.
-
-**Observation:**
-
-The algorithm may find a solution or stop at a state that still contains conflicts.
+This second outcome is related to the local maximum problem. A valid arrangement may exist elsewhere, but the algorithm may not reach it from its current starting state.
 
 ## 10. Visualizing the Chessboard
 
-We can use Matplotlib to display the chessboard and queen positions.
+The function `print_board(state)` was used to display the queen arrangement in chessboard form.
 
-**Python Code:**
+The following symbols represent the board:
 
-```python
-import matplotlib.pyplot as plt
+- `Q` — Queen.
+- `.` — Empty position.
 
-def print_board(state):
-    n = len(state)
-
-    for row in range(n):
-        line = ""
-
-        for col in range(n):
-            if state[col] == row:
-                line += "Q "
-            else:
-                line += ". "
-
-        print(line)
-
-    print()
-
-
-print_board(solution)
-```
-
-**Explanation:**
-
-- `Q` represents a queen.
-- `.` represents an empty square.
-- Each row and column is displayed.
-- The function helps us understand the final arrangement of queens.
-
-**Observation:**
-
-If the final state has zero conflicts, no two queens attack each other.
+This visualization makes it easier to inspect the final state. If a valid solution is found, no two queens should attack each other.
 
 ## 11. Plotting the Evaluation Score
 
-We can use a graph to observe how the evaluation score changes during the Hill-Climbing process.
+Matplotlib was used to draw a graph of the evaluation score across the iterations of Hill-Climbing.
 
-**Python Code:**
-
-```python
-plt.plot(scores, marker='o')
-
-plt.title("Hill-Climbing Evaluation Score")
-plt.xlabel("Iteration")
-plt.ylabel("Evaluation Score")
-
-plt.grid()
-plt.show()
-```
+This graph helps us understand how the algorithm changes the current state and when it stops improving.
 
 ### Questions and Answers
 
-**Q1. Does the evaluation score increase during Hill-Climbing?**
+**Q1. Does the evaluation score increase when Hill-Climbing moves to a better state?**
 
-Yes. The evaluation score increases when Hill-Climbing moves to a better state.
+Yes. Whenever the algorithm selects a better neighboring state, its evaluation score increases.
 
-**Q2. Can the evaluation score decrease during the algorithm?**
+**Q2. Can the score decrease during an accepted move?**
 
-No. The algorithm accepts only moves that improve the evaluation score.
+No. In this implementation, a move is accepted only when it improves the current evaluation score.
 
-**Q3. Why does the algorithm stop?**
+**Q3. Why does the algorithm stop when it cannot find a better neighbor?**
 
-It stops because no neighboring state has a higher evaluation score than the current state.
+It stops because none of the neighboring states has a higher score than the current state.
 
-**Q4. What does an evaluation score of zero mean?**
+**Q4. What does an evaluation score of zero indicate?**
 
-A score of zero means there are no conflicts between any pair of queens. A valid solution has been found.
+It indicates that there are no conflicts between any pair of queens. Therefore, a valid solution has been found.
 
-**Q5. Can the algorithm stop with a negative evaluation score?**
+**Q5. Can Hill-Climbing stop while its evaluation score is negative?**
 
-Yes. It can stop with a negative score if no neighboring state improves the current state. This may be a local maximum that is not a valid solution.
+Yes. If none of the neighboring states improves the current score, the algorithm can stop with a negative score. This means it has reached a local maximum that is not a valid solution.
 
 ## 12. Experimenting with Different Board Sizes
 
-In this task, Hill-Climbing is tested with different board sizes to observe its performance.
+Basic Hill-Climbing was tested with different board sizes: **N = 4, 8, 10, and 12**.
 
-The board sizes used are:
+Multiple runs were performed to observe how the initial random arrangement affects the final result.
 
-```python
-board_sizes = [4, 8, 10, 12]
-```
+### Experimental Results
 
-### Task 1: Run Hill-Climbing for Different Board Sizes
-
-**Python Code:**
-
-```python
-for n in board_sizes:
-
-    solution, scores = hill_climbing(n)
-
-    conflicts = count_conflicts(solution)
-
-    print("Board Size:", n)
-    print("Final Conflicts:", conflicts)
-    print("Iterations:", len(scores))
-    print("Solved:", conflicts == 0)
-    print("----------------------")
-```
-
-### Task 2: Record Experimental Results
-
-The following table shows the recorded experimental results.
-
-| N | Run | Final Conflicts | Iterations | Solved? |
-|---|---|---:|---:|---|
+| Board Size (N) | Run | Final Conflicts | Iterations | Solved? |
+|---|---|---|---|---|
 | 4 | 1 | 1 | 2 | No |
 | 4 | 2 | 0 | 3 | Yes |
 | 8 | 1 | 0 | 6 | Yes |
@@ -382,270 +216,151 @@ The following table shows the recorded experimental results.
 | 10 | 2 | 1 | 7 | No |
 | 10 | 3 | 2 | 4 | No |
 
-### Observation
+**Observation:**
 
-The results show that Hill-Climbing can produce different outcomes for the same board size.
-
-This happens because each run may start from a different random initial state.
-
-As the board size increases, the search space also becomes larger.
+The same board size can give different results in separate runs. This happens because each run may begin with a different random arrangement. As a result, the final conflicts and number of iterations can also change.
 
 ## 13. Improving the Search: Random-Restart Hill-Climbing
 
-Basic Hill-Climbing can get stuck at a local maximum.
+Basic Hill-Climbing begins with one random state. If it reaches a non-goal local maximum, that particular search ends without finding a valid solution.
 
-To improve its performance, we use Random-Restart Hill-Climbing.
+Random-Restart Hill-Climbing improves this approach by starting new searches from different random initial states.
 
-Random-Restart runs Basic Hill-Climbing multiple times using different random initial states.
+**Working procedure:**
 
-If one run does not find a solution, the algorithm starts again with a new random state.
-
-The process continues until a solution is found or the maximum number of restarts is reached.
+1. Generate a random initial state.
+2. Execute Basic Hill-Climbing.
+3. Check whether the result is a valid solution.
+4. If the solution is found, stop the search.
+5. If not, generate another random initial state.
+6. Repeat until a solution is found or the restart limit is reached.
 
 ### Probabilistic Completeness
 
-Random-Restart improves the probability of finding a solution.
+Probabilistic completeness means that, under suitable conditions, the probability of finding a solution approaches 100% as the number of independent attempts increases.
 
-If the probability of success in one independent attempt is `p`, then the probability of success after `k` attempts is:
+In simple words, giving the algorithm more independent attempts can improve its chance of success.
 
-\[
-P(\text{success}) = 1 - (1-p)^k
-\]
+However, this does not mean that it must find a solution within a fixed number of restarts.
 
-This means that the probability of finding a solution increases as the number of attempts increases.
+If each independent attempt has a nonzero probability of success, the probability of finding at least one solution after k attempts is:
 
-However, a fixed number of attempts does not guarantee success.
+**P(success) = 1 − (1 − p)ᵏ**
+
+Here, p represents the probability of success in one attempt.
+
+This explains why repeated attempts can improve the chance of finding a solution. It does not guarantee success within a limited number of attempts.
 
 ## 14. Implementing Random-Restart Hill-Climbing
 
-**Python Code:**
+The function `random_restart_hill_climbing(n, max_restarts=100)` was implemented to run Hill-Climbing repeatedly.
 
-```python
-def random_restart_hill_climbing(n, max_restarts=100):
+During these attempts, the algorithm keeps the best state and its evaluation score.
 
-    best_state = None
-    best_score = float('-inf')
-    best_scores = []
+The search ends in either of these situations:
 
-    for restart in range(1, max_restarts + 1):
+- A valid solution is found.
+- The maximum number of restarts is reached.
 
-        state, scores = hill_climbing(n)
-
-        final_score = evaluate(state)
-
-        if final_score > best_score:
-            best_score = final_score
-            best_state = state
-            best_scores = scores
-
-        if count_conflicts(state) == 0:
-            return state, restart, scores
-
-    return best_state, max_restarts, best_scores
-```
-
-**Explanation:**
-
-1. The algorithm starts with no best state.
-2. It runs Basic Hill-Climbing.
-3. It checks the final evaluation score.
-4. If a better state is found, it saves that state.
-5. If a solution is found, it returns immediately.
-6. Otherwise, it continues until the restart limit is reached.
+If the restart limit is reached without finding a solution, the algorithm returns the best state found during its attempts.
 
 ## 15. Plotting Random-Restart Progress
 
-We can plot the evaluation scores of the best run to observe its progress.
+Matplotlib was used to plot the best evaluation score recorded after each restart.
 
-**Python Code:**
+This graph differs from the graph of Basic Hill-Climbing. Instead of showing the progress of one search, it shows the best result retained across multiple searches.
 
-```python
-solution, restarts, best_scores = (
-    random_restart_hill_climbing(8, max_restarts=100)
-)
+The score cannot decrease because the algorithm keeps the best state found so far.
 
-plt.plot(best_scores, marker='o')
-
-plt.title("Random-Restart Hill-Climbing Progress")
-plt.xlabel("Iteration")
-plt.ylabel("Evaluation Score")
-
-plt.grid()
-plt.show()
-```
-
-**Explanation:**
-
-- The graph displays the evaluation scores of the best run.
-- A higher score represents a better state.
-- A score of zero represents a valid solution.
-- The algorithm may need multiple restarts before finding a solution.
+When the score reaches zero, a valid solution has been obtained.
 
 ## 16. Comparing Basic and Random-Restart Hill-Climbing
 
-In this task, both algorithms are tested five times to compare their performance.
+Both algorithms were tested five times using an eight-queen board.
 
-### Task 1: Run Both Algorithms Five Times
-
-**Python Code:**
-
-```python
-for run in range(5):
-
-    # Basic Hill-Climbing
-    basic_state, basic_scores = hill_climbing(8)
-
-    basic_conflicts = count_conflicts(basic_state)
-
-    # Random-Restart Hill-Climbing
-    rr_state, restarts, rr_scores = (
-        random_restart_hill_climbing(8, max_restarts=100)
-    )
-
-    rr_conflicts = count_conflicts(rr_state)
-
-    print("Run:", run + 1)
-
-    print("Basic Hill-Climbing")
-    print("Conflicts:", basic_conflicts)
-    print("Iterations:", len(basic_scores))
-    print("Solved:", basic_conflicts == 0)
-
-    print("Random-Restart Hill-Climbing")
-    print("Conflicts:", rr_conflicts)
-    print("Restarts:", restarts)
-    print("Solved:", rr_conflicts == 0)
-
-    print("--------------------------")
-```
-
-### Task 2: Record Experimental Results
-
-The following table shows the results of five experimental runs.
+### Experimental Results
 
 | Run | Basic Conflicts | Basic Iterations | Basic Solved? | Random-Restart Conflicts | Restarts | Solved? |
-|---|---:|---:|---|---:|---:|---|
+|---|---|---|---|---|---|---|
 | 1 | 1 | 6 | No | 0 | 7 | Yes |
 | 2 | 1 | 5 | No | 0 | 7 | Yes |
 | 3 | 0 | 4 | Yes | 0 | 1 | Yes |
 | 4 | 2 | 4 | No | 0 | 8 | Yes |
 | 5 | 2 | 3 | No | 0 | 7 | Yes |
 
-### Task 3: Compare Both Algorithms
+**Observation:**
+
+In these experiments, Basic Hill-Climbing found a valid solution in only one out of five runs. Random-Restart, however, found a solution in all five runs.
+
+This shows how trying different initial states can provide additional opportunities to find a valid arrangement.
+
+### Comparison of Both Algorithms
 
 | Basic Hill-Climbing | Random-Restart Hill-Climbing |
 |---|---|
-| Uses one initial state. | Uses multiple random initial states. |
-| Stops when no better neighbor exists. | Can restart after an unsuccessful run. |
-| May get stuck at a non-goal local maximum. | Provides additional opportunities to find a solution. |
-| Uses fewer attempts. | May require multiple restarts. |
+| Begins with one initial state. | Tries multiple random initial states. |
+| Stops when no better neighbor is available. | Can begin another search after an unsuccessful run. |
+| May stop at a non-goal local maximum. | Provides more opportunities to find a solution. |
+| Usually performs one search attempt. | May need several restarts. |
 | Does not guarantee a solution. | Improves the probability of finding a solution. |
 
-### Task 4: Local Search vs Traditional Search
+### Local Search and Traditional Search
 
-| Local Search | Traditional Search |
-|---|---|
-| Focuses on the current state. | Explores paths from the initial state. |
-| Does not store the complete search path. | Usually maintains a search tree or frontier. |
-| Uses neighboring states to improve the solution. | Uses different search strategies to explore states. |
-| Requires less memory in many cases. | May require more memory. |
-| Example: Hill-Climbing. | Examples: BFS and DFS. |
+Traditional search algorithms such as BFS, DFS, and A* explore possible states to find a path from the initial state to the goal.
 
-### Task 5: Questions and Answers
-
-**Q1. Does Basic Hill-Climbing always find a solution?**
-
-No. Basic Hill-Climbing does not necessarily find a solution in every run. Its result depends on the random initial state, and it may stop at a local maximum.
-
-**Q2. Does Random-Restart improve the chances of finding a solution?**
-
-Yes. Random-Restart generally improves the chances because it tries new random starting states after unsuccessful attempts.
-
-**Q3. Why does the number of restarts differ in each run?**
-
-The number of restarts depends on the random initial states. A solution may be found quickly in one run, while another run may require more attempts.
-
-**Q4. What does Restarts = 100 and Solved = False mean?**
-
-It means the algorithm reached its maximum restart limit without finding a solution.
-
-**Q5. Does Random-Restart guarantee a solution?**
-
-No. It improves the probability of finding a solution, but a fixed number of attempts cannot guarantee success.
-
-### Observation
-
-In these five experiments, Basic Hill-Climbing found a solution in only one run out of five.
-
-Random-Restart Hill-Climbing found a solution in all five runs.
-
-This shows that Random-Restart can improve the chances of finding a valid solution.
+Local Search focuses on improving the current state instead of finding a complete path. Hill-Climbing belongs to this category because it repeatedly selects a better neighboring state.
 
 ## 17. Lab Questions
 
 **Q1. What is the purpose of the evaluation function in Hill-Climbing?**
 
-The evaluation function measures the quality of a state. In the N-Queens problem, it counts the attacking pairs of queens and returns the negative number of conflicts. It helps the algorithm choose better neighboring states.
+The evaluation function measures the quality of a state. In this problem, it counts the attacking pairs of queens and returns the negative conflict count. This helps the algorithm compare neighboring states and select a better one.
 
-**Q2. What does an evaluation score of zero represent?**
+**Q2. Why is an evaluation score of zero the best result?**
 
-An evaluation score of zero means there are no attacking pairs of queens. It represents a valid solution to the N-Queens problem.
+A score of zero means that no two queens are attacking each other. Therefore, the N-Queens problem is solved.
 
 **Q3. What is the difference between a local maximum and a global maximum?**
 
-A local maximum is a state that has a higher score than all its immediate neighbors.
+A local maximum is a state whose score is at least as high as the scores of its immediate neighbors. A global maximum is the highest possible score in the entire search space.
 
-A global maximum is the highest possible state in the entire search space.
+**Q4. Why can Basic Hill-Climbing stop without finding a solution even when a solution exists?**
 
-**Q4. Why can Basic Hill-Climbing fail to find a solution?**
+Basic Hill-Climbing stops when none of the neighboring states improves the current score. A valid solution may exist elsewhere, but reaching it may require temporarily moving to a worse state.
 
-Basic Hill-Climbing stops when no neighboring state improves the current state. A valid solution may exist elsewhere, but reaching it may require temporarily moving to a worse state.
+**Q5. Does reaching a local maximum always mean that the algorithm has failed?**
 
-**Q5. Is every local maximum a solution?**
+No. If the local maximum is also the global maximum and represents the goal, the algorithm has succeeded. In this problem, a score of zero means success. A negative local maximum means that the algorithm stopped without finding a solution.
 
-No. A local maximum is not always a solution. If it has an evaluation score of zero, it is a valid solution. If its score is negative, conflicts still exist.
+**Q6. For N = 8, how many neighbors does each state have in our implementation?**
 
-**Q6. How many neighbors are generated for an 8-Queens problem?**
+Each queen can move to seven alternative rows in its column.
 
-The number of neighbors is calculated using:
+8 × (8 − 1) = 8 × 7 = **56 neighbors**.
 
-\[
-N \times (N-1)
-\]
+**Q7. What information does the evaluation-score graph provide?**
 
-For N = 8:
+The graph shows how the score changes during the search. It increases when the algorithm accepts a better move and stops changing when no better neighbor is available. A score of zero indicates that a solution has been found.
 
-\[
-8 \times 7 = 56
-\]
+**Q8. Explain probabilistic completeness in your own words.**
 
-Therefore, 56 neighboring states are generated.
+Probabilistic completeness means that if a solution exists and each independent attempt has a nonzero probability of finding it, the chance of success approaches 100% as the number of attempts increases.
 
-**Q7. What does the evaluation score graph show?**
+**Q9. Why does Random-Restart improve the chance of finding a solution?**
 
-The graph shows how the evaluation score changes during the search. The score increases when the algorithm accepts a better move and stops changing when no better neighbor is available. A score of zero represents a solution.
+It uses different random initial states. This gives the algorithm more opportunities to find a solution instead of stopping at an unsuccessful local maximum.
 
-**Q8. What is probabilistic completeness?**
+**Q10. Does probabilistic completeness guarantee that a solution will be found within 100 restarts? Why?**
 
-Probabilistic completeness means that if a solution exists and each independent attempt has a nonzero probability of finding it, the probability of finding a solution approaches 100% as the number of attempts increases.
-
-**Q9. How does Random-Restart help avoid local maxima?**
-
-Random-Restart uses different random initial states. If one run stops at an unsuccessful local maximum, the algorithm starts again from another state. This provides more opportunities to find a solution.
-
-**Q10. Does Random-Restart guarantee a solution within 100 restarts?**
-
-No. Random-Restart does not guarantee a solution within 100 restarts. The probability of success increases with more attempts, but a fixed restart limit can still fail.
+No. The probability of success increases as the number of attempts grows, but a fixed limit of 100 restarts can still end without finding a solution.
 
 ## 18. Extension Task: N = 20
 
-In this extension task, both Basic Hill-Climbing and Random-Restart Hill-Climbing are tested with a 20 × 20 chessboard.
+In this extension, the same N-Queens experiment was performed with 20 queens.
 
-The purpose is to observe how both algorithms perform with a larger board size.
+Both Basic Hill-Climbing and Random-Restart Hill-Climbing were executed. The final conflicts, number of iterations or restarts, and solution status were recorded.
 
-### Task 1: Basic Hill-Climbing for N = 20
-
-**Python Code:**
+### Cell 1 — Basic Hill-Climbing for N = 20
 
 ```python
 state_20, scores_20 = hill_climbing(20)
@@ -669,13 +384,13 @@ Iterations: 8
 Solved: False
 ```
 
-**Observation:**
+**Basic Hill-Climbing Results:**
 
-Basic Hill-Climbing may stop with remaining conflicts because it can get stuck at a local maximum.
+- Final conflicts: 4
+- Number of iterations: 8
+- Solution found: No
 
-### Task 2: Random-Restart Hill-Climbing for N = 20
-
-**Python Code:**
+### Cell 2 — Random-Restart Hill-Climbing for N = 20
 
 ```python
 solution_20, restarts_20, best_scores_20 = (
@@ -701,29 +416,35 @@ Restarts: 45
 Solved: True
 ```
 
-**Observation:**
+**Random-Restart Hill-Climbing Results:**
 
-Random-Restart Hill-Climbing can find a valid solution by trying different random initial states. It may require multiple restarts before finding a solution.
+- Final conflicts: 0
+- Number of restarts: 45
+- Solution found: Yes
 
-**Note:** The outputs above are sample values. Since the algorithm uses random initial states, your actual notebook may display different states, conflicts, iterations, or restart counts. Use your own notebook output if it differs.
+### Comparison and Observation
+
+In this sample execution, Basic Hill-Climbing stopped with four conflicts remaining. It could not find a better neighboring state from its final arrangement.
+
+Random-Restart Hill-Climbing tried new initial states and found a valid arrangement after 45 restarts.
+
+This experiment shows that random restarts can provide additional opportunities to solve a larger N-Queens problem. The exact number of iterations and restarts may change between executions because the starting states are random.
 
 ## 19. Final Learning Outcomes
 
-After completing this lab, I learned:
+After completing this practical, I learned how to:
 
-- The basic concept of Local Search and Hill-Climbing.
-- How to represent the N-Queens problem using a Python list.
-- How to generate random initial states.
-- How to calculate conflicts between queens.
-- How to use an evaluation function to measure state quality.
-- How to generate neighboring states.
-- How Basic Hill-Climbing selects better neighboring states.
-- Why Hill-Climbing can get stuck at a local maximum.
-- How Random-Restart improves the probability of finding a solution.
-- How to compare the performance of both algorithms.
-- How to visualize the chessboard and evaluation scores.
-- How search performance changes with different board sizes.
+- Describe the difference between traditional search and local search.
+- Represent the N-Queens problem using a Python list.
+- Create an evaluation function and count queen conflicts.
+- Generate neighboring states by moving one queen.
+- Implement Basic Hill-Climbing in Python.
+- Display the chessboard and plot evaluation scores.
+- Understand why Hill-Climbing may stop at a non-goal local maximum.
+- Implement Random-Restart Hill-Climbing.
+- Explain probabilistic completeness and its conditions.
+- Compare both algorithms through repeated experiments.
 
-**Conclusion:**
+**Key Takeaway**
 
-In this lab, I implemented Basic Hill-Climbing and Random-Restart Hill-Climbing to solve the N-Queens problem. I observed that Basic Hill-Climbing can get stuck at a local maximum, while Random-Restart provides additional opportunities to find a valid solution. Therefore, Random-Restart can improve the chances of finding a solution, especially for larger board sizes.
+Hill-Climbing improves the current arrangement by moving towards a better neighboring state. It may find a valid solution, but it can also stop at a non-goal local maximum. Random-Restart improves the chances of success by trying different initial states, although it cannot guarantee a solution within a fixed restart limit.
