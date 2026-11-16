@@ -22,7 +22,7 @@
 | **Department** | Computer Science |
 | **Subject Name** | Artificial Intelligence |
 | **Lab Title** | AI Labs |
-| **Instructor Name** | Imran Ali |
+| **Instructor Name** | Mr Imran Ali |
 
 ---
 
@@ -54,7 +54,5 @@
 ---
 
 *Department of Computer Science*
-
-### ✦ END OF COVER PAGE ✦
 
 </div>
