@@ -31,7 +31,7 @@
 | Lab No. | Practical Title |
 |:---:|---|
 | 01 |[ Knowledge-Based-Systems](./Lab-01/) |
-| 02 | Lab-02-Uninformed-search |
+| 02 |[Lab-02-Uninformed-search] (./Lab-02-Uninformed-search/) |
 | 03 | Lab-03-Informed-search |
 | 04 | Lab-04-Hill_climbing|
 
