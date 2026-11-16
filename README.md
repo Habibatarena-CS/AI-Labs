@@ -28,13 +28,12 @@
 
 ## 📚 AI LABS — Assignments
 
-| Lab No. | Practical Title |
+| Lab | Topic |
 |:---:|---|
-| 01 |[ Knowledge-Based-Systems](./Lab-01/) |
-| 02 |[Lab-02-Uninformed-search] (./Lab-02-Uninformed-search/) |
-| 03 | Lab-03-Informed-search |
-| 04 | Lab-04-Hill_climbing|
-
+| Lab 1 | [Knowledge-Based Systems](./Lab-01-Knowledge-Based-Systems/) |
+| Lab 2 | [Uninformed Search](./Lab-02-Uninformed-search/) |
+| Lab 3 | [Informed Search](./Lab-03-Informed-search/) |
+| Lab 4 | [Hill-Climbing Search with the N-Queens Problem](./Lab-04-Hill_climbing/) |
 ---
 
 <div align="center">
